@@ -1,0 +1,2 @@
+# vietnamese_word_segmentation
+CRFSによって、ベトナム語の形態素解析
