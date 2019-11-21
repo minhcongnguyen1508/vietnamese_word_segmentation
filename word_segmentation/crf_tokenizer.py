@@ -22,14 +22,6 @@ def wrapper(func, args):
     return func(*args)
 
 def load_data_from_file(ab_path):
-    """
-    Load data from file and prepare format dict
-    :param data_path: input file path
-    :return: sentences and labels
-    Examples
-    chain_words = [['Hello', 'World'], ['Hello', 'World']]
-    labels = [['B_W', 'I_W'], ['B_W', 'I_W']]
-    """
     chain_words = []
     labels = []
     with open(ab_path, 'r', encoding="utf8") as fr:
@@ -72,7 +64,7 @@ class CRF_Segmentation():
     def __init__(self, root_path="", bi_grams_path='bi_grams.txt', tri_grams_path='tri_grams.txt',
                  crf_config_path='crf_config.txt',
                  features_path='crf_features.txt',
-                 model_path='vi-word-segment.crfsuite',
+                 model_path='vi-word-segment',
                  load_data_f_file=load_data_from_dir,
                  base_lib='sklearn_crfsuite'):
         self.bi_grams = load_n_grams(root_path + bi_grams_path)
@@ -167,7 +159,7 @@ class CRF_Segmentation():
             )
             crf.fit(X, y)
             # joblib.dump(crf, self.model_path)
-            with open(self.model_path, 'wb') as fw:
+            with open('../models/'+self.model_path, 'wb') as fw:
                 pickle.dump(crf, fw)
         else:
             trainer = pycrfsuite.Trainer(verbose=False)
@@ -176,30 +168,20 @@ class CRF_Segmentation():
                 trainer.append(xseq, yseq)
 
             trainer.set_params(self.crf_config)
-            trainer.train(self.model_path)
+            trainer.train('../models/'+self.model_path)
 
     def load_tagger(self):
-        """
-        Load tagger model from file
-        :return: None
-        """
-        print("Loading model from file {}".format(self.model_path))
+        print("Loading model from file {}".format('../models/'+self.model_path))
         if self.base_lib == "sklearn_crfsuite":
             # self.tagger = joblib.load(self.model_path)
-            with open(self.model_path, 'rb') as fr:
+            with open('../models/'+self.model_path, 'rb') as fr:
                 self.tagger = pickle.load(fr)
         else:
             self.tagger = pycrfsuite.Tagger()
-            self.tagger.open(self.model_path, encoding="utf8")
+            self.tagger.open('../models/'+self.model_path, encoding="utf8")
 
     @staticmethod
     def syllablize(text):
-        """
-        Split a sentences into an array of syllables
-        :param text: input sentence
-        :return: list of syllables
-        """
-        # TODO: Fix bug on datetime, E.g. 2013/10/20 09:20:30
         text = ud.normalize('NFC', text)
         sign = ["==>", "->", "\.\.\.", ">>"]
         digits = "\d+([\.,_]\d+)+"
@@ -393,9 +375,9 @@ def check_acc(actual, expected):
 
 def test1():
     crf_tokenizer_obj = CRF_Segmentation()
-    # crf_tokenizer_obj.train('../data/tokenized/samples/training')
+    crf_tokenizer_obj.train('../data/tokenized/samples/training')
 
-    text, expects = load_file_test('../data/tokenized/samples/test/data.txt')
+    text, expects = load_file_test('../data/tokenized/samples/test/test_data.txt')
     accuracy = []
     result = crf_tokenizer_obj.tokenize(text[3])
     print(result)
@@ -411,4 +393,4 @@ def test1():
     print("F1 Score: {}%".format(avg*100), end="\n\n")
 
 if __name__ == '__main__':
-    test()
+    test1()
